@@ -24,6 +24,8 @@ VOID ShowErrorMsg(DWORD messageId)
 
 	wprintf(L"\n%s", errorMsg);
 
+	LocalFree(errorMsg);
+
 }
 
 
