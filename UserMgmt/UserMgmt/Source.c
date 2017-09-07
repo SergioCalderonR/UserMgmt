@@ -15,21 +15,46 @@ int wmain(int argc, WCHAR *argv[])
 	DWORD entriesRead;
 	DWORD totalEntries;
 
-	if (argc != 2)
+	DWORD index;
+
+	if (argc == 1)
 	{
 		ShowHelp();
 	}
 
-	//Retrieves local groups
-	localGroups = NetUserGetLocalGroups(NULL, argv[1], level, flags, (LPBYTE*)&groups,
-										prefMaxLen, &entriesRead, &totalEntries);
-
-	if (localGroups != NERR_Success)
-		ShowErrorMsg(localGroups);
-	else
+	switch (argc)
 	{
-		ShowErrorMsg(localGroups);
+	//UserMgmt.exe -all UserName
+	case 3:
+		if (lstrcmpW(argv[1], L"-all") == 0)
+		{
+			wprintf(L"\n-all switch.\n");
+
+			//Retrieves local groups
+			localGroups = NetUserGetLocalGroups(NULL, argv[2], level, flags, (LPBYTE*)&groups,
+				prefMaxLen, &entriesRead, &totalEntries);
+
+			if (localGroups != NERR_Success)
+				ShowErrorMsg(localGroups);
+			else
+			{
+				wprintf(L"\nLocal Group (s) to which the user belongs:\n");
+
+				for (index = 0; index < entriesRead; index++, groups++)
+				{
+					wprintf(L"--%s\n", groups->lgrui0_name);
+				}
+			}
+			
+		}
+		break;
+
+	default:
+		ShowHelp();		
+		break;
 	}
+
+	
 	
 
 	return 0;

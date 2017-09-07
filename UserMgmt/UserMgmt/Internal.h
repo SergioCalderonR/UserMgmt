@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <tchar.h>
 #include <LM.h>
+#include <string.h>
 
 VOID ShowHelp(VOID)
 {
