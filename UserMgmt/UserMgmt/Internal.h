@@ -20,7 +20,10 @@ VOID ShowErrorMsg(DWORD messageId)
 	LPWSTR errorMsg;
 	DWORD size = 0;
 
-	FormatMessageW(flags, NULL, messageId, languageID, (LPTSTR)&errorMsg, size, NULL);
+	if (!FormatMessageW(flags, NULL, messageId, languageID, (LPWSTR)&errorMsg, size, NULL))
+	{
+		wprintf(L"Format message failed with error code: %lu\n", GetLastError());
+	}
 
 	wprintf(L"\n%s", errorMsg);
 
