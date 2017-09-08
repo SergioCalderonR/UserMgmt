@@ -9,22 +9,26 @@ int wmain(int argc, WCHAR *argv[])
 
 	//NetUserEnum
 	DWORD infoLevel = 1;	//USER_INFO_1 structure
-	DWORD filter;
-	PUSER_INFO_1 enumGroup;
+	DWORD filter=0;
+	LPUSER_INFO_1 enumGroup=NULL;
+	LPUSER_INFO_1 tmpEnumGroup;
 	DWORD enumEntriesRead;
 	DWORD enumTotalEntries;
+	DWORD resumeHandle = 0;
 
 	//NetUserGetLocalGroups
 	DWORD level = 0;	//array of LOCALGROUP_USER_INFO_0 structures
 	DWORD flags = LG_INCLUDE_INDIRECT;
-	PLOCALGROUP_USERS_INFO_0 groups;
+	PLOCALGROUP_USERS_INFO_0 groups=NULL;
+	PLOCALGROUP_USERS_INFO_0 tmpGroups;
 	DWORD prefMaxLen=MAX_PREFERRED_LENGTH;
 	DWORD entriesRead;
 	DWORD totalEntries;
 
 	//NetUserGetGroups
 	DWORD globalLevel = 0;	//array of GROUP_USERS_INFO_0 structures
-	PGROUP_USERS_INFO_0 domainGroups;
+	PGROUP_USERS_INFO_0 domainGroups=NULL;
+	PGROUP_USERS_INFO_0 tmpDomainGroups;
 	DWORD globalEntriesRead;
 	DWORD globalTotalEntries;
 
@@ -38,6 +42,56 @@ int wmain(int argc, WCHAR *argv[])
 
 	switch (argc)
 	{
+	//UserMgmt.exe -enum
+	case 2:
+		if (_wcsicmp(argv[1], L"-enum") == 0)
+		{
+			enumUsers = NetUserEnum(NULL, infoLevel, filter, (LPBYTE*)&enumGroup,
+				prefMaxLen, &enumEntriesRead, &enumTotalEntries, &resumeHandle);
+
+			tmpEnumGroup = enumGroup;
+
+			if (enumUsers != NERR_Success)
+				ShowErrorMsg(enumUsers);
+			else
+			{
+
+				wprintf(L"\nAll users on this PC:\n");
+				for (index = 0; index < enumEntriesRead; index++, enumGroup++)
+				{
+					
+					switch (enumGroup->usri1_priv)
+					{
+					case USER_PRIV_GUEST:
+						wprintf(L"--%s (Guest User)\n", enumGroup->usri1_name);
+						break;
+					case USER_PRIV_USER:
+						wprintf(L"--%s (Standard User)\n", enumGroup->usri1_name);
+						break;
+					case USER_PRIV_ADMIN:
+						wprintf(L"--%s (Admin User)\n", enumGroup->usri1_name);
+						break;
+					}
+				}
+
+			}
+
+			NET_API_STATUS freeEnum = NetApiBufferFree(tmpEnumGroup);
+
+			if (freeEnum != NERR_Success)
+			{
+				ShowErrorMsg(freeEnum);
+				enumGroup = NULL;
+			}
+
+
+
+		}
+		else
+			ShowHelp();
+
+		break;
+
 	//UserMgmt.exe -all UserName
 	case 3:
 		
