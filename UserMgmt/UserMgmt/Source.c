@@ -9,7 +9,7 @@ int wmain(int argc, WCHAR *argv[])
 
 	//NetUserEnum
 	DWORD infoLevel = 1;	//USER_INFO_1 structure
-	DWORD filter=0;
+	DWORD filter=FILTER_NORMAL_ACCOUNT | FILTER_INTERDOMAIN_TRUST_ACCOUNT;
 	LPUSER_INFO_1 enumGroup=NULL;
 	LPUSER_INFO_1 tmpEnumGroup;
 	DWORD enumEntriesRead;
@@ -31,6 +31,8 @@ int wmain(int argc, WCHAR *argv[])
 	PGROUP_USERS_INFO_0 tmpDomainGroups;
 	DWORD globalEntriesRead;
 	DWORD globalTotalEntries;
+
+	NET_API_STATUS freeEnum;
 
 
 	DWORD index;
@@ -76,7 +78,7 @@ int wmain(int argc, WCHAR *argv[])
 
 			}
 
-			NET_API_STATUS freeEnum = NetApiBufferFree(tmpEnumGroup);
+			freeEnum = NetApiBufferFree(tmpEnumGroup);
 
 			if (freeEnum != NERR_Success)
 			{
@@ -101,8 +103,14 @@ int wmain(int argc, WCHAR *argv[])
 			localGroups = NetUserGetLocalGroups(NULL, argv[2], level, flags, (LPBYTE*)&groups,
 				prefMaxLen, &entriesRead, &totalEntries);
 
+			tmpGroups = groups;
+
 			if (localGroups != NERR_Success)
+			{
+				wprintf(L"\nLocal Group (s) to which the user belongs:\n");
 				ShowErrorMsg(localGroups);
+			}
+				
 			else
 			{
 				wprintf(L"\nLocal Group (s) to which the user belongs:\n");
@@ -113,12 +121,26 @@ int wmain(int argc, WCHAR *argv[])
 				}
 			}
 
+			freeEnum = NetApiBufferFree(tmpGroups);
+
+			if (freeEnum != NERR_Success)
+			{
+				ShowErrorMsg(freeEnum);
+				groups = NULL;
+			}
+
 			//Retrieves global groups
 			globalGroups = NetUserGetGroups(NULL, argv[2], globalLevel, (LPBYTE*)&domainGroups,
 											prefMaxLen, &globalEntriesRead, &globalTotalEntries);
 
+			tmpDomainGroups = domainGroups;
+
 			if (globalGroups != NERR_Success)
+			{
+				wprintf(L"\nGlobal Group (s) to which the user belongs:\n");
 				ShowErrorMsg(globalGroups);
+			}
+				
 			else
 			{
 				wprintf(L"\nGlobal Group (s) to which the user belongs:\n");
@@ -128,6 +150,16 @@ int wmain(int argc, WCHAR *argv[])
 					wprintf(L"--%s\n", domainGroups->grui0_name);
 				}
 			}
+
+			freeEnum = NetApiBufferFree(tmpDomainGroups);
+
+			if (freeEnum != NERR_Success)
+			{
+				ShowErrorMsg(freeEnum);
+				domainGroups = NULL;
+			}
+
+
 			
 		}
 		break;
