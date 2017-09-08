@@ -5,7 +5,14 @@
 int wmain(int argc, WCHAR *argv[])
 {
 	//Functions
-	NET_API_STATUS localGroups, globalGroups;
+	NET_API_STATUS localGroups, globalGroups, enumUsers;
+
+	//NetUserEnum
+	DWORD infoLevel = 1;	//USER_INFO_1 structure
+	DWORD filter;
+	PUSER_INFO_1 enumGroup;
+	DWORD enumEntriesRead;
+	DWORD enumTotalEntries;
 
 	//NetUserGetLocalGroups
 	DWORD level = 0;	//array of LOCALGROUP_USER_INFO_0 structures
@@ -74,9 +81,7 @@ int wmain(int argc, WCHAR *argv[])
 	default:
 		ShowHelp();		
 		break;
-	}
-
-	
+	}	
 	
 
 	return 0;
